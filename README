@@ -1,0 +1,11 @@
+Usage: 
+test env mode config: bash escommander.sh -m production -t 
+clear previous indexes info with backup: bash escommander.sh -m production -a clear 
+start with instances: sudo bash escommander.sh -m production -a start -n 2
+remove instances: sudo bash escommander.sh -m production -a stop_instances
+
+
+TODOS: 
+- pull user outside script;
+- misc file/process existence checks;
+- index config in regular file. script parses to json.

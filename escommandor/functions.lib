@@ -1,0 +1,79 @@
+#!/bin/bash
+
+test_function() {	
+	echo "User <$USER> is ready in <$ENV> using <$ELPATH>"
+}
+
+#create
+start() {
+	echo "---starting ES service"
+	sudo su $USER $ELPATH/bin/service/elasticsearch start
+
+	sleep 1
+}
+
+#instances create
+start_instances() {
+	if [ $NUMOFINST -gt 0 ] 
+	then
+		echo "--producing $NUMOFINST instances..."
+		for i in `seq 1 $NUMOFINST`;
+		do
+			WORKNAME="elastic_instance_$i"
+		        echo $i
+			screen -A -m -d -S $WORKNAME
+			screen -X -S $WORKNAME -p 0 title $WORKNAME
+			sleep 1
+			screen -X -S $WORKNAME -p 0 stuff "sudo su $USER $ELPATH/bin/elasticsearch"`echo -ne '\015'`
+		done   
+		#sudo su $USER $ELPATH/bin/elasticsearch
+	fi
+}
+
+#terminate
+stop() {
+	echo "---stopping es service"
+	sudo su $USER $ELPATH/bin/service/elasticsearch stop
+}
+
+#instances stop
+stop_instances() {
+        echo "--stopping instances"
+	NUMOFINST=10
+	for i in `seq 1 $NUMOFINST`;
+	do
+		WORKNAME="elastic_instance_$i"
+		echo $WORKNAME
+		screen -S $WORKNAME -X quit
+	done
+	sudo ps aux | grep org.elasticsearch.bootstrap.ElasticSearch | grep -v grep | awk '{print $2}' | xargs kill -9
+}
+
+
+set_mode() {
+	ENV=$1
+	if [ $ENV = "development" ]
+	then
+		echo "* development mode"
+		ELPATH="/home/aaglushkov/Programs/elasticsearch-0.18.2"
+		USER="aaglushkov"
+	elif [ $ENV = "production" ]  
+	then
+		echo "* production mode"
+		ELPATH="/usr/local/share/elasticsearch"
+		USER="elsearch"	
+	fi	
+}
+
+
+deploy() {
+	bash elastic_index_deploy.sh
+}
+
+clear() {
+	sudo su $USER `mv $ELPATH/data $ELPATH/data_less_$(date +%Y-%m-%d)`
+
+#	sudo su $USER `mv /home/aaglushkov/temp/read /home/aaglushkov/temp/read_less_$(date +%Y-%m-%d)`
+
+}
+
